@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PPT pls"
+description = "A premium last-minute presentation ordering app for students to request custom PowerPoint decks by subject, slide count, currency, and delivery needs."
+version = "1.0.0"
+id = "artifacts/ppt-pls"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18710
+
+[services.development]
+run = "pnpm --filter @workspace/ppt-pls run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ppt-pls", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ppt-pls/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18710"
+BASE_PATH = "/"
