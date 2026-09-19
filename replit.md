@@ -1,6 +1,6 @@
-# [Project name]
+# PPT pls
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+PPT pls is a premium ordering app for students who need a polished, custom medical presentation delivered quickly.
 
 ## Run & Operate
 
@@ -22,15 +22,24 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/ppt-pls/src/App.tsx` — customer ordering flow and confirmation view
+- `artifacts/ppt-pls/src/index.css` — PPT pls visual language and responsive styles
+- `lib/api-spec/openapi.yaml` — source of truth for catalog, order, and checkout contracts
+- `artifacts/api-server/src/routes/catalog.ts` — subject groups and price catalog
+- `artifacts/api-server/src/routes/orders.ts` — order capture and hosted checkout handoff
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Customer briefs are captured before payment so a request is not lost if hosted checkout is unavailable.
+- Whop remains the payment source of truth; the app only keeps the short-lived order context needed to return the customer to the brief.
+- Prices are modeled by subject group and slide range, with USD, INR, and GEL display values.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Students choose a medical subject group, subject, slide range, currency, and service mode.
+- Students submit a topic, requirements, and delivery email.
+- The order flow opens hosted checkout when Whop checkout configuration is available and provides a mail fallback when it is not.
+- The studio promise is presented as delivery within one hour after payment and brief review.
 
 ## User preferences
 
@@ -38,7 +47,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- `WHOP_COMPANY_ID` and `WHOP_PLAN_ID` are required to enable the hosted checkout route; without them, the customer flow intentionally falls back to email instead of faking payment success.
 
 ## Pointers
 

@@ -1,0 +1,1 @@
+- [Whop checkout fallback](whop-checkout.md) — keep the brief saved and fail to email quickly when hosted checkout connectivity stalls.

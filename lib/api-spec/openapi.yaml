@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: catalog
+    description: PPT ordering catalog and pricing
+  - name: orders
+    description: Customer presentation requests
 paths:
   /healthz:
     get:
@@ -24,6 +28,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /catalog:
+    get:
+      operationId: getCatalog
+      tags: [catalog]
+      summary: Get presentation categories and pricing
+      responses:
+        "200":
+          description: Catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalog"
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a presentation request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Presentation request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /checkout:
+    post:
+      operationId: createCheckout
+      tags: [orders]
+      summary: Create a hosted payment checkout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "201":
+          description: Hosted checkout created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checkout"
+        "503":
+          description: Payments are not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +97,82 @@ components:
           type: string
       required:
         - status
+    Price:
+      type: object
+      required: [id, label, slides, usd, inr, gel]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        slides: { type: string }
+        usd: { type: number }
+        inr: { type: number }
+        gel: { type: number }
+    SubjectGroup:
+      type: object
+      required: [id, label, subjects]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        description: { type: string }
+        subjects:
+          type: array
+          items: { type: string }
+        prices:
+          type: array
+          items: { $ref: "#/components/schemas/Price" }
+    Catalog:
+      type: object
+      required: [groups, currencies]
+      properties:
+        groups:
+          type: array
+          items: { $ref: "#/components/schemas/SubjectGroup" }
+        currencies:
+          type: array
+          items: { type: string }
+    OrderInput:
+      type: object
+      required: [email, subjectGroup, subject, slideRange, topic, deliveryMode]
+      properties:
+        email: { type: string, format: email }
+        subjectGroup: { type: string, minLength: 1 }
+        subject: { type: string, minLength: 1 }
+        slideRange: { type: string, minLength: 1 }
+        topic: { type: string, minLength: 3 }
+        instructions: { type: string }
+        deliveryMode:
+          type: string
+          enum: [standard, personalized]
+        currency:
+          type: string
+          enum: [USD, INR, GEL]
+    Order:
+      type: object
+      required: [id, status, email, topic, deliveryEta]
+      properties:
+        id: { type: string }
+        status: { type: string }
+        email: { type: string }
+        topic: { type: string }
+        deliveryEta: { type: string }
+        checkoutUrl: { type: ["string", "null"] }
+    CheckoutInput:
+      type: object
+      required: [orderId, currency]
+      properties:
+        orderId: { type: string }
+        currency:
+          type: string
+          enum: [USD, INR, GEL]
+    Checkout:
+      type: object
+      required: [purchaseUrl]
+      properties:
+        purchaseUrl: { type: string, format: uri }
+        orderId: { type: string }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
 
