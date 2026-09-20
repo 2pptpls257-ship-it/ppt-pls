@@ -15,7 +15,6 @@ export interface Price {
   slides: string;
   usd: number;
   inr: number;
-  gel: number;
 }
 
 export interface SubjectGroup {
@@ -26,9 +25,17 @@ export interface SubjectGroup {
   prices?: Price[];
 }
 
+export type CatalogCurrenciesItem = typeof CatalogCurrenciesItem[keyof typeof CatalogCurrenciesItem];
+
+
+export const CatalogCurrenciesItem = {
+  USD: 'USD',
+  INR: 'INR',
+} as const;
+
 export interface Catalog {
   groups: SubjectGroup[];
-  currencies: string[];
+  currencies: CatalogCurrenciesItem[];
 }
 
 export type OrderInputDeliveryMode = typeof OrderInputDeliveryMode[keyof typeof OrderInputDeliveryMode];
@@ -45,7 +52,6 @@ export type OrderInputCurrency = typeof OrderInputCurrency[keyof typeof OrderInp
 export const OrderInputCurrency = {
   USD: 'USD',
   INR: 'INR',
-  GEL: 'GEL',
 } as const;
 
 export interface OrderInput {
@@ -79,7 +85,6 @@ export type CheckoutInputCurrency = typeof CheckoutInputCurrency[keyof typeof Ch
 export const CheckoutInputCurrency = {
   USD: 'USD',
   INR: 'INR',
-  GEL: 'GEL',
 } as const;
 
 export interface CheckoutInput {

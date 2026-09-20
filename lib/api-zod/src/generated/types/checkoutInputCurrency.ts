@@ -12,5 +12,4 @@ export type CheckoutInputCurrency = typeof CheckoutInputCurrency[keyof typeof Ch
 export const CheckoutInputCurrency = {
   USD: 'USD',
   INR: 'INR',
-  GEL: 'GEL',
 } as const;

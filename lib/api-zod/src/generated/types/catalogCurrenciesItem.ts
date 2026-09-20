@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type OrderInputCurrency = typeof OrderInputCurrency[keyof typeof OrderInputCurrency];
+export type CatalogCurrenciesItem = typeof CatalogCurrenciesItem[keyof typeof CatalogCurrenciesItem];
 
 
-export const OrderInputCurrency = {
+export const CatalogCurrenciesItem = {
   USD: 'USD',
   INR: 'INR',
 } as const;

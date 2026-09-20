@@ -10,10 +10,10 @@ import type { Catalog, OrderInput, SubjectGroup } from '@workspace/api-client-re
 import NotFound from '@/pages/not-found';
 
 const queryClient = new QueryClient();
-type Currency = 'USD' | 'INR' | 'GEL';
+type Currency = 'USD' | 'INR';
 type DeliveryMode = 'standard' | 'personalized';
 
-const currencySymbols: Record<Currency, string> = { USD: '$', INR: '₹', GEL: '₾' };
+const currencySymbols: Record<Currency, string> = { USD: '$', INR: '₹' };
 
 function Header() {
   const [open, setOpen] = useState(false);
@@ -69,7 +69,7 @@ function PriceLine({ amount, currency }: { amount?: number; currency: Currency }
 
 function OrderPanel({ catalog }: { catalog: Catalog }) {
   const groups = catalog.groups ?? [];
-  const currencies = (catalog.currencies ?? []).filter((value): value is Currency => ['USD', 'INR', 'GEL'].includes(value));
+  const currencies = (catalog.currencies ?? []).filter((value): value is Currency => ['USD', 'INR'].includes(value));
   const [subjectGroupId, setSubjectGroupId] = useState(groups[0]?.id ?? '');
   const [subject, setSubject] = useState('');
   const [slideRange, setSlideRange] = useState('');
@@ -152,7 +152,7 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
             <div className="space-y-5">
               <div><FieldLabel>Subject group</FieldLabel><div className="relative"><select required value={subjectGroupId} onChange={(event) => setSubjectGroupId(event.target.value)} className="form-select" data-testid="select-subject-group">{groups.map((group) => <option value={group.id} key={group.id}>{group.label}</option>)}</select><ChevronDown className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" size={16} /></div>{selectedGroup?.description && <p className="mt-2 text-xs leading-5 text-[hsl(var(--muted-foreground))]">{selectedGroup.description}</p>}</div>
               <div><FieldLabel>Subject</FieldLabel><div className="relative"><select required value={subject} onChange={(event) => setSubject(event.target.value)} className="form-select" data-testid="select-subject">{(selectedGroup?.subjects ?? []).map((item) => <option value={item} key={item}>{item}</option>)}</select><ChevronDown className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" size={16} /></div></div>
-              <div><FieldLabel hint="Choose your depth">Slide count</FieldLabel><div className="grid grid-cols-3 gap-2">{prices.map((price) => <button type="button" key={price.id} onClick={() => setSlideRange(price.slides)} className={`choice-tile ${selectedPrice?.id === price.id ? 'choice-tile-active' : ''}`} data-testid={`button-slide-range-${price.id}`}><span className="block text-sm font-semibold">{price.slides}</span><span className="mt-1 block text-[10px] text-[hsl(var(--muted-foreground))]"><PriceLine amount={price[currency.toLowerCase() as 'usd' | 'inr' | 'gel']} currency={currency} /></span></button>)}</div></div>
+              <div><FieldLabel hint="Choose your depth">Slide count</FieldLabel><div className="grid grid-cols-3 gap-2">{prices.map((price) => <button type="button" key={price.id} onClick={() => setSlideRange(price.slides)} className={`choice-tile ${selectedPrice?.id === price.id ? 'choice-tile-active' : ''}`} data-testid={`button-slide-range-${price.id}`}><span className="block text-sm font-semibold">{price.slides}</span><span className="mt-1 block text-[10px] text-[hsl(var(--muted-foreground))]"><PriceLine amount={price[currency.toLowerCase() as 'usd' | 'inr']} currency={currency} /></span></button>)}</div></div>
               <div><FieldLabel>Delivery preference</FieldLabel><div className="grid gap-2 sm:grid-cols-2">{(['standard', 'personalized'] as DeliveryMode[]).map((mode) => <button type="button" key={mode} onClick={() => setDeliveryMode(mode)} className={`mode-tile ${deliveryMode === mode ? 'mode-tile-active' : ''}`} data-testid={`button-delivery-${mode}`}><span className="flex items-center gap-2 text-sm font-semibold">{deliveryMode === mode ? <Check size={14} /> : <span className="h-3.5 w-3.5 rounded-full border border-current opacity-40" />}{mode === 'standard' ? 'Standard' : 'Personalized'}</span><span className="mt-1 block pl-5 text-[11px] leading-4 text-[hsl(var(--muted-foreground))]">{mode === 'standard' ? 'Clear, polished, on brief' : 'More direction, more refinement'}</span></button>)}</div></div>
               <div><FieldLabel hint="At least 3 characters">Topic</FieldLabel><input required minLength={3} value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="e.g. Acute kidney injury" className="form-input" data-testid="input-topic" /></div>
               <div><FieldLabel hint="Optional">Requirements or source material</FieldLabel><textarea value={instructions} onChange={(event) => setInstructions(event.target.value)} placeholder="Audience, learning objectives, references, tone..." rows={3} className="form-input resize-none" data-testid="textarea-instructions" /></div>
@@ -161,7 +161,7 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
             </div>
 
             <div className="mt-7 border-t border-[hsl(var(--border))] pt-5">
-              <div className="mb-4 flex items-end justify-between"><div><p className="text-[11px] uppercase tracking-[.13em] text-[hsl(var(--muted-foreground))]">Estimated total</p><p className="mt-1 font-editorial text-3xl text-[hsl(var(--primary))]"><PriceLine amount={selectedPrice?.[currency.toLowerCase() as 'usd' | 'inr' | 'gel']} currency={currency} /></p></div><p className="max-w-[135px] text-right text-[11px] leading-4 text-[hsl(var(--muted-foreground))]">Final delivery timing is confirmed after your brief.</p></div>
+              <div className="mb-4 flex items-end justify-between"><div><p className="text-[11px] uppercase tracking-[.13em] text-[hsl(var(--muted-foreground))]">Estimated total</p><p className="mt-1 font-editorial text-3xl text-[hsl(var(--primary))]"><PriceLine amount={selectedPrice?.[currency.toLowerCase() as 'usd' | 'inr']} currency={currency} /></p></div><p className="max-w-[135px] text-right text-[11px] leading-4 text-[hsl(var(--muted-foreground))]">Final delivery timing is confirmed after your brief.</p></div>
               {notice && <div className={`mb-4 rounded-xl border p-4 ${notice.type === 'error' ? 'border-[hsl(var(--destructive)/.35)] bg-[hsl(var(--destructive)/.06)]' : 'border-[hsl(var(--accent)/.4)] bg-[hsl(var(--accent)/.08)]'}`} data-testid={`status-${notice.type}`}><p className="text-sm font-semibold text-[hsl(var(--primary))]">{notice.title}</p><p className="mt-1 text-xs leading-5 text-[hsl(var(--muted-foreground))]">{notice.body}</p>{notice.type === 'fallback' && <a href={mailto} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[hsl(var(--accent))] underline-offset-4 hover:underline" data-testid="link-email-fallback"><Mail size={13} /> Email the studio instead <ArrowRight size={13} /></a>}</div>}
               <button disabled={isSubmitting} type="submit" className="primary-button w-full" data-testid="button-submit-order">{isSubmitting ? <><LoaderCircle className="animate-spin" size={16} />{submitLabel}</> : <>{submitLabel}<ArrowRight size={16} /></>}</button>
               <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] text-[hsl(var(--muted-foreground))]"><ShieldCheck size={12} className="text-[hsl(var(--secondary-foreground))]" /> You will review your brief before payment</p>

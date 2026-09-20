@@ -5,9 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CatalogCurrenciesItem } from './catalogCurrenciesItem';
 import type { SubjectGroup } from './subjectGroup';
 
 export interface Catalog {
   groups: SubjectGroup[];
-  currencies: string[];
+  currencies: CatalogCurrenciesItem[];
 }

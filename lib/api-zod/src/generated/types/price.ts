@@ -12,5 +12,4 @@ export interface Price {
   slides: string;
   usd: number;
   inr: number;
-  gel: number;
 }

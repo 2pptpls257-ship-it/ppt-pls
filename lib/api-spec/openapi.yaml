@@ -99,14 +99,13 @@ components:
         - status
     Price:
       type: object
-      required: [id, label, slides, usd, inr, gel]
+      required: [id, label, slides, usd, inr]
       properties:
         id: { type: string }
         label: { type: string }
         slides: { type: string }
         usd: { type: number }
         inr: { type: number }
-        gel: { type: number }
     SubjectGroup:
       type: object
       required: [id, label, subjects]
@@ -129,7 +128,9 @@ components:
           items: { $ref: "#/components/schemas/SubjectGroup" }
         currencies:
           type: array
-          items: { type: string }
+          items:
+            type: string
+            enum: [USD, INR]
     OrderInput:
       type: object
       required: [email, subjectGroup, subject, slideRange, topic, deliveryMode]
@@ -145,7 +146,7 @@ components:
           enum: [standard, personalized]
         currency:
           type: string
-          enum: [USD, INR, GEL]
+          enum: [USD, INR]
     Order:
       type: object
       required: [id, status, email, topic, deliveryEta]
@@ -163,7 +164,7 @@ components:
         orderId: { type: string }
         currency:
           type: string
-          enum: [USD, INR, GEL]
+          enum: [USD, INR]
     Checkout:
       type: object
       required: [purchaseUrl]

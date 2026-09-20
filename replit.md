@@ -32,7 +32,7 @@ PPT pls is a premium ordering app for students who need a polished, custom medic
 
 - Customer briefs are captured before payment so a request is not lost if hosted checkout is unavailable.
 - Whop remains the payment source of truth; the app only keeps the short-lived order context needed to return the customer to the brief.
-- Prices are modeled by subject group and slide range, with USD, INR, and GEL display values.
+- Prices are modeled by subject group and slide range, with USD and INR display values.
 
 ## Product
 
@@ -47,7 +47,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Hosted checkout uses the pre-created Whop plan URLs in `artifacts/api-server/src/routes/orders.ts`; no Whop API key is required for this static-link path. GEL remains unavailable until a GEL checkout URL is configured. The app never fakes payment success.
+- Hosted checkout uses the pre-created USD and INR Whop plan URLs in `artifacts/api-server/src/routes/orders.ts`; no Whop API key is required for this static-link path. The app never fakes payment success.
 
 ## Pointers
 

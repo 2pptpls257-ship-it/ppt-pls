@@ -4,27 +4,27 @@ import { GetCatalogResponse } from "@workspace/api-zod";
 const router: IRouter = Router();
 
 const preClinicalPrices = [
-  { id: "pre-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 249, gel: 8.2 },
-  { id: "pre-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 419, gel: 13.7 },
-  { id: "pre-25-30", label: "Deep dive", slides: "25–30", usd: 5.99, inr: 499, gel: 16.5 },
+  { id: "pre-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 249 },
+  { id: "pre-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 419 },
+  { id: "pre-25-30", label: "Deep dive", slides: "25–30", usd: 5.99, inr: 499 },
 ];
 
 const paraClinicalPrices = [
-  { id: "para-10-15", label: "Essentials", slides: "10–15", usd: 3.99, inr: 329, gel: 10.9 },
-  { id: "para-15-25", label: "Complete", slides: "15–25", usd: 5.99, inr: 499, gel: 16.5 },
-  { id: "para-25-30", label: "Deep dive", slides: "25–30", usd: 6.99, inr: 579, gel: 19.2 },
+  { id: "para-10-15", label: "Essentials", slides: "10–15", usd: 3.99, inr: 329 },
+  { id: "para-15-25", label: "Complete", slides: "15–25", usd: 5.99, inr: 499 },
+  { id: "para-25-30", label: "Deep dive", slides: "25–30", usd: 6.99, inr: 579 },
 ];
 
 const clinicalPrices = [
-  { id: "clinical-10-15", label: "Essentials", slides: "10–15", usd: 4.99, inr: 419, gel: 13.7 },
-  { id: "clinical-15-25", label: "Complete", slides: "15–25", usd: 6.99, inr: 579, gel: 19.2 },
-  { id: "clinical-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 669, gel: 22.0 },
+  { id: "clinical-10-15", label: "Essentials", slides: "10–15", usd: 4.99, inr: 419 },
+  { id: "clinical-15-25", label: "Complete", slides: "15–25", usd: 6.99, inr: 579 },
+  { id: "clinical-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 669 },
 ];
 
 router.get("/catalog", (_req, res) => {
   res.json(
     GetCatalogResponse.parse({
-      currencies: ["USD", "INR", "GEL"],
+      currencies: ["USD", "INR"],
       groups: [
         {
           id: "pre-clinical",

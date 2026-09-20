@@ -7,6 +7,7 @@
  */
 
 export * from './catalog';
+export * from './catalogCurrenciesItem';
 export * from './checkout';
 export * from './checkoutInput';
 export * from './checkoutInputCurrency';

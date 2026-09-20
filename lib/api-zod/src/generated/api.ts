@@ -31,11 +31,10 @@ export const GetCatalogResponse = zod.object({
   "label": zod.string(),
   "slides": zod.string(),
   "usd": zod.number(),
-  "inr": zod.number(),
-  "gel": zod.number()
+  "inr": zod.number()
 })).optional()
 })),
-  "currencies": zod.array(zod.string())
+  "currencies": zod.array(zod.enum(['USD', 'INR']))
 })
 
 
@@ -57,7 +56,7 @@ export const CreateOrderBody = zod.object({
   "topic": zod.string().min(createOrderBodyTopicMin),
   "instructions": zod.string().optional(),
   "deliveryMode": zod.enum(['standard', 'personalized']),
-  "currency": zod.enum(['USD', 'INR', 'GEL']).optional()
+  "currency": zod.enum(['USD', 'INR']).optional()
 })
 
 export const CreateOrderResponse = zod.object({
@@ -75,7 +74,7 @@ export const CreateOrderResponse = zod.object({
  */
 export const CreateCheckoutBody = zod.object({
   "orderId": zod.string(),
-  "currency": zod.enum(['USD', 'INR', 'GEL'])
+  "currency": zod.enum(['USD', 'INR'])
 })
 
 export const CreateCheckoutResponse = zod.object({

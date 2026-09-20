@@ -13,7 +13,7 @@ type StoredOrder = {
   topic: string;
   instructions?: string;
   deliveryMode: "standard" | "personalized";
-  currency?: "USD" | "INR" | "GEL";
+  currency?: "USD" | "INR";
   createdAt: string;
 };
 
