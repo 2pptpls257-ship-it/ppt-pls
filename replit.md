@@ -38,7 +38,7 @@ PPT pls is a premium ordering app for students who need a polished, custom medic
 
 - Students choose a medical subject group, subject, slide range, currency, and service mode.
 - Students submit a topic, requirements, and delivery email.
-- The order flow opens hosted checkout when Whop checkout configuration is available and provides a mail fallback when it is not.
+- The order flow creates a one-time Whop hosted checkout under the configured company and provides a mail fallback when the payment connector is unavailable.
 - The studio promise is presented as delivery within one hour after payment and brief review.
 
 ## User preferences
@@ -47,7 +47,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- `WHOP_COMPANY_ID` and `WHOP_PLAN_ID` are required to enable the hosted checkout route; without them, the customer flow intentionally falls back to email instead of faking payment success.
+- `WHOP_COMPANY_ID` identifies the Whop company receiving hosted checkout payments. The connected Whop integration can provide it automatically; the app creates one-time checkout plans per order and never fakes payment success.
 
 ## Pointers
 

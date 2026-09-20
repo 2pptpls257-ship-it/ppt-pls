@@ -70,8 +70,8 @@ router.post("/checkout", async (req, res) => {
     return;
   }
 
-  // Whop remains the source of truth for paid orders. This route is intentionally
-  // explicit until a hosted plan is configured in the connected Whop account.
+  // Whop remains the source of truth for paid orders. A one-time hosted checkout
+  // plan is created under the configured Whop company for each brief.
   try {
     const client = await getWhopClient();
     const companyId = process.env.WHOP_COMPANY_ID ?? (await getWhopCompanyId());
