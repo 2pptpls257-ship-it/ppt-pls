@@ -38,7 +38,7 @@ PPT pls is a premium ordering app for students who need a polished, custom medic
 
 - Students choose a medical subject group, subject, slide range, currency, and service mode.
 - Students submit a topic, requirements, and delivery email.
-- The order flow creates a one-time Whop hosted checkout under the configured company using a server-only `WHOP_API_KEY` and provides a mail fallback when hosted checkout is unavailable.
+- The order flow redirects to pre-created Whop hosted checkout plans for USD and INR and provides a mail fallback when a currency has no configured checkout URL.
 - The studio promise is presented as delivery within one hour after payment and brief review.
 
 ## User preferences
@@ -47,7 +47,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- `WHOP_COMPANY_ID` identifies the Whop company receiving hosted checkout payments. `WHOP_API_KEY` is stored only as a Replit Secret and is used by the server-side Whop SDK. The app creates one-time checkout plans per order and never fakes payment success.
+- Hosted checkout uses the pre-created Whop plan URLs in `artifacts/api-server/src/routes/orders.ts`; no Whop API key is required for this static-link path. GEL remains unavailable until a GEL checkout URL is configured. The app never fakes payment success.
 
 ## Pointers
 

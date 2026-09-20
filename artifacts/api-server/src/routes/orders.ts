@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import { CreateCheckoutBody, CreateCheckoutResponse, CreateOrderBody, CreateOrderResponse } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
-import { getWhopClient, getWhopCompanyId } from "../lib/whopClient";
 
 const router: IRouter = Router();
 
@@ -19,15 +18,17 @@ type StoredOrder = {
 };
 
 const orders = new Map<string, StoredOrder>();
-const usdPrices: Record<string, Record<string, number>> = {
-  "pre-clinical": { "10–15": 2.99, "15–25": 4.99, "25–30": 5.99 },
-  "para-clinical": { "10–15": 3.99, "15–25": 5.99, "25–30": 6.99 },
-  clinical: { "10–15": 4.99, "15–25": 6.99, "25–30": 7.99 },
-};
-const localPrices: Record<string, Record<string, number>> = {
-  USD: usdPrices["clinical"],
-  INR: { "10–15": 419, "15–25": 579, "25–30": 669 },
-  GEL: { "10–15": 13.7, "15–25": 19.2, "25–30": 22 },
+const staticCheckoutUrls: Record<string, Record<string, string>> = {
+  USD: {
+    "10–15": "https://whop.com/checkout/plan_Cn0EQqO3VHcnS",
+    "15–25": "https://whop.com/checkout/plan_jcGSjuHp4SlBK",
+    "25–30": "https://whop.com/checkout/plan_hvey2G1l6pvwA",
+  },
+  INR: {
+    "10–15": "https://whop.com/checkout/plan_trrl1XCMtr9i3",
+    "15–25": "https://whop.com/checkout/plan_uPADufWc9uw0E",
+    "25–30": "https://whop.com/checkout/plan_UIswlqOW6Yl53",
+  },
 };
 
 router.post("/orders", (req, res) => {
@@ -70,38 +71,15 @@ router.post("/checkout", async (req, res) => {
     return;
   }
 
-  // Whop remains the source of truth for paid orders. A one-time hosted checkout
-  // plan is created under the configured Whop company for each brief.
-  try {
-    const client = await getWhopClient();
-    const companyId = process.env.WHOP_COMPANY_ID ?? (await getWhopCompanyId());
-    const redirectUrl = `${req.protocol}://${req.get("host")}/success?order=${encodeURIComponent(order.id)}`;
-    const currency = parsed.data.currency;
-    const amount = currency === "USD"
-      ? usdPrices[order.subjectGroup]?.[order.slideRange]
-      : localPrices[currency]?.[order.slideRange];
-    if (!amount) throw new Error("Could not calculate the selected price.");
-
-    const checkout = await client.checkoutConfigurations.create({
-      plan: {
-        account_id: companyId,
-        currency: currency.toLowerCase(),
-        initial_price: amount,
-        plan_type: "one_time",
-        release_method: "buy_now",
-        description: `Custom ${order.subject} presentation on ${order.topic}`,
-        force_create_new_plan: true,
-      },
-      redirect_url: redirectUrl,
-      mode: "payment",
+  const purchaseUrl = staticCheckoutUrls[parsed.data.currency]?.[order.slideRange];
+  if (!purchaseUrl) {
+    res.status(503).json({
+      error: `Hosted checkout is not configured for ${parsed.data.currency} yet.`,
     });
-    if (!checkout.purchase_url) throw new Error("Whop did not return a hosted checkout URL.");
-
-    res.status(201).json(CreateCheckoutResponse.parse({ purchaseUrl: checkout.purchase_url, orderId: order.id }));
-  } catch (error) {
-    req.log.error({ err: error, orderId: order.id }, "Could not create Whop checkout");
-    res.status(503).json({ error: "Hosted checkout is temporarily unavailable." });
+    return;
   }
+
+  res.status(201).json(CreateCheckoutResponse.parse({ purchaseUrl, orderId: order.id }));
 });
 
 export default router;
