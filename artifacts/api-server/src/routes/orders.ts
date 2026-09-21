@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { CreateCheckoutBody, CreateCheckoutResponse, CreateOrderBody, CreateOrderResponse } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
+import { sendOrderNotificationEmail } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -45,6 +46,7 @@ router.post("/orders", (req, res) => {
     createdAt: new Date().toISOString(),
   };
   orders.set(order.id, order);
+  void sendOrderNotificationEmail(order);
 
   res.status(201).json(
     CreateOrderResponse.parse({

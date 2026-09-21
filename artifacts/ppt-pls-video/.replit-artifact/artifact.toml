@@ -1,0 +1,28 @@
+kind = "video"
+previewPath = "/ppt-pls-video/"
+title = "PPT pls — Animated Product Video"
+description = "A short animated product video introducing PPT pls, the premium medical presentation studio for students who need a polished deck quickly."
+version = "1.0.0"
+id = "artifacts/ppt-pls-video"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/ppt-pls-video/" ]
+localPort = 19131
+
+[services.development]
+run = "pnpm --filter @workspace/ppt-pls-video run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ppt-pls-video", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ppt-pls-video/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19131"
+BASE_PATH = "/ppt-pls-video/"
