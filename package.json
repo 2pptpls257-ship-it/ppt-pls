@@ -9,7 +9,7 @@
     "dev:api": "pnpm --filter @workspace/api-server run dev",
     "build:web": "pnpm --filter @workspace/ppt-pls run build",
     "build:api": "pnpm --filter @workspace/api-server run build",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build": "pnpm --filter @workspace/ppt-pls run build && node -e \"const fs=require('fs'); fs.cpSync('artifacts/ppt-pls/dist/public', 'public', {recursive:true}); fs.cpSync('artifacts/ppt-pls/dist/public', 'dist', {recursive:true});\"",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },

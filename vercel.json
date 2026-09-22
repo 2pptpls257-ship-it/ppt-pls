@@ -1,7 +1,6 @@
 {
-  "framework": "vite",
-  "buildCommand": "pnpm --filter @workspace/ppt-pls run build",
-  "outputDirectory": "artifacts/ppt-pls/dist/public",
+  "outputDirectory": "public",
+  "buildCommand": "pnpm run build",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "rewrites": [
     {
