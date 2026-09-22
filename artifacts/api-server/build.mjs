@@ -56,6 +56,14 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
   await copyFile(serverlessFile, path.resolve(localApiDir, "[...slug].js"));
   await copyFile(serverlessFile, path.resolve(rootApiDir, "index.js"));
   await copyFile(serverlessFile, path.resolve(rootApiDir, "[...slug].js"));
+
+  for (const name of ["catalog.js", "orders.js", "checkout.js"]) {
+    try {
+      await copyFile(path.resolve(rootApiDir, name), path.resolve(localApiDir, name));
+    } catch {
+      // ignore
+    }
+  }
 }
 
 buildAll().catch((err) => {

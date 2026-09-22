@@ -16,7 +16,8 @@
   },
   "private": true,
   "dependencies": {
-    "@replit/connectors-sdk": "^0.4.3"
+    "@replit/connectors-sdk": "^0.4.3",
+    "nodemailer": "^10.0.10"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
