@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "outputDirectory": "public",
+  "outputDirectory": "dist",
   "buildCommand": "pnpm run build",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "rewrites": [

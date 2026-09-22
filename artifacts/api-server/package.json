@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm run build && pnpm run start",
-    "build": "node ./build.mjs",
+    "build": "pnpm --filter @workspace/ppt-pls run build && node -e \"const fs=require('fs'); fs.cpSync('../ppt-pls/dist/public', 'public', {recursive:true}); fs.cpSync('../ppt-pls/dist/public', 'dist', {recursive:true});\" && node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
