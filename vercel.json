@@ -1,12 +1,12 @@
 {
-  "version": 2,
+  "framework": "vite",
   "buildCommand": "pnpm --filter @workspace/ppt-pls run build",
   "outputDirectory": "artifacts/ppt-pls/dist/public",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.ts"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
