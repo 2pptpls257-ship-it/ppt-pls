@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "packageManager": "pnpm@9.15.9",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "dev": "pnpm --filter @workspace/api-server --filter @workspace/ppt-pls --parallel run dev",
     "dev:web": "pnpm --filter @workspace/ppt-pls run dev",

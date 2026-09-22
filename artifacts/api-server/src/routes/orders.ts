@@ -32,7 +32,7 @@ const staticCheckoutUrls: Record<string, Record<string, string>> = {
   },
 };
 
-router.post("/orders", (req, res) => {
+router.post("/orders", async (req, res) => {
   const parsed = CreateOrderBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Please complete the required brief fields." });
@@ -46,7 +46,11 @@ router.post("/orders", (req, res) => {
     createdAt: new Date().toISOString(),
   };
   orders.set(order.id, order);
-  void sendOrderNotificationEmail(order);
+  try {
+    await sendOrderNotificationEmail(order);
+  } catch {
+    // continue to send response
+  }
 
   res.status(201).json(
     CreateOrderResponse.parse({

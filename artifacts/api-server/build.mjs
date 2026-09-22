@@ -47,12 +47,9 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     platform: "node",
     target: "node18",
     bundle: true,
-    format: "cjs",
+    format: "esm",
     outfile: serverlessFile,
     logLevel: "info",
-    footer: {
-      js: "\nmodule.exports = app_default;\nmodule.exports.default = app_default;\n",
-    },
   });
 
   // Copy to [...slug].js and root api/ directory for maximum compatibility
