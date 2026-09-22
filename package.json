@@ -1,6 +1,7 @@
 {
   "name": "workspace",
   "version": "0.0.0",
+  "packageManager": "pnpm@9.15.9",
   "license": "MIT",
   "scripts": {
     "dev": "pnpm --filter @workspace/api-server --filter @workspace/ppt-pls --parallel run dev",
