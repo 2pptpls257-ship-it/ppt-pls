@@ -44273,20 +44273,13 @@ var nodemailer_default = nodemailer;
 
 // artifacts/api-server/src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
-var isProduction = process.env.NODE_ENV === "production";
 var logger = (0, import_pino.default)({
   level: process.env.LOG_LEVEL ?? "info",
   redact: [
     "req.headers.authorization",
     "req.headers.cookie",
     "res.headers['set-cookie']"
-  ],
-  ...isProduction ? {} : {
-    transport: {
-      target: "pino-pretty",
-      options: { colorize: true }
-    }
-  }
+  ]
 });
 
 // artifacts/api-server/src/lib/email.ts
@@ -44466,6 +44459,7 @@ app.use((0, import_cors.default)());
 app.use(import_express5.default.json());
 app.use(import_express5.default.urlencoded({ extended: true }));
 app.use("/api", routes_default);
+app.use(routes_default);
 var app_default = app;
 /*! Bundled license information:
 
@@ -44765,3 +44759,7 @@ object-assign/index.js:
   @license MIT
   *)
 */
+
+module.exports = app_default;
+module.exports.default = app_default;
+

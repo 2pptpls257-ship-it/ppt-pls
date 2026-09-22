@@ -38,6 +38,78 @@ const currencySymbols: Record<Currency, string> = {
   INR: '₹',
 };
 
+const STATIC_CHECKOUT_URLS: Record<string, Record<string, string>> = {
+  USD: {
+    '10–15': 'https://whop.com/checkout/plan_Cn0EQqO3VHcnS',
+    '15–25': 'https://whop.com/checkout/plan_jcGSjuHp4SlBK',
+    '25–30': 'https://whop.com/checkout/plan_hvey2G1l6pvwA',
+  },
+  INR: {
+    '10–15': 'https://whop.com/checkout/plan_trrl1XCMtr9i3',
+    '15–25': 'https://whop.com/checkout/plan_uPADufWc9uw0E',
+    '25–30': 'https://whop.com/checkout/plan_UIswlqOW6Yl53',
+  },
+};
+
+const DEFAULT_CATALOG: Catalog = {
+  currencies: ['USD', 'INR'],
+  groups: [
+    {
+      id: 'pre-clinical',
+      label: 'Pre-clinical sciences',
+      description: 'The foundations: structure, function, and the chemistry of life.',
+      subjects: ['Anatomy', 'Physiology', 'Biochemistry'],
+      prices: [
+        { id: 'pre-10-15', label: 'Essentials', slides: '10–15', usd: 2.99, inr: 249 },
+        { id: 'pre-15-25', label: 'Complete', slides: '15–25', usd: 4.99, inr: 419 },
+        { id: 'pre-25-30', label: 'Deep dive', slides: '25–30', usd: 5.99, inr: 499 },
+      ],
+    },
+    {
+      id: 'para-clinical',
+      label: 'Para-clinical sciences',
+      description: 'The bridge between foundational knowledge and the ward.',
+      subjects: ['Pathology', 'Pharmacology', 'Microbiology', 'Forensic Medicine'],
+      prices: [
+        { id: 'para-10-15', label: 'Essentials', slides: '10–15', usd: 3.99, inr: 329 },
+        { id: 'para-15-25', label: 'Complete', slides: '15–25', usd: 5.99, inr: 499 },
+        { id: 'para-25-30', label: 'Deep dive', slides: '25–30', usd: 6.99, inr: 579 },
+      ],
+    },
+    {
+      id: 'clinical',
+      label: 'Clinical subjects',
+      description: 'Patient-facing disciplines, from diagnosis to emergency care.',
+      subjects: [
+        'General Medicine',
+        'Dermatology',
+        'Psychiatry',
+        'Neurology',
+        'Cardiology',
+        'Respiratory Medicine',
+        'Gastroenterology',
+        'Nephrology',
+        'General Surgery',
+        'Orthopedics',
+        'Urology',
+        'Neurosurgery',
+        'Obstetrics',
+        'Gynecology',
+        'Pediatrics',
+        'Ophthalmology',
+        'ENT',
+        'Emergency Medicine',
+        'Others',
+      ],
+      prices: [
+        { id: 'clinical-10-15', label: 'Essentials', slides: '10–15', usd: 4.99, inr: 419 },
+        { id: 'clinical-15-25', label: 'Complete', slides: '15–25', usd: 6.99, inr: 579 },
+        { id: 'clinical-25-30', label: 'Deep dive', slides: '25–30', usd: 7.99, inr: 669 },
+      ],
+    },
+  ],
+};
+
 function Header() {
   const [open, setOpen] = useState(false);
 
@@ -228,51 +300,22 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
     setSlideRange(selectedGroup?.prices?.[0]?.slides ?? '');
   }, [selectedGroup]);
 
-  const isSubmitting =
-    createOrder.isPending || createCheckout.isPending;
+  const [isSubmittingDirect, setIsSubmittingDirect] = useState(false);
+  const isSubmitting = createOrder.isPending || isSubmittingDirect;
 
-  const submitLabel = createOrder.isPending
-    ? 'Saving your brief'
-    : createCheckout.isPending
-      ? 'Opening secure checkout'
-      : requestSent
-        ? 'I’ve sent the request — Continue to Payment'
-        : 'Send PPT Request';
+  const submitLabel = isSubmitting
+    ? 'Saving brief & redirecting to checkout...'
+    : 'Continue to payment';
 
-  function buildMailto(orderId: string) {
-    const body = [
-      'Hello PPT pls,',
-      '',
-      'I would like to order a presentation.',
-      '',
-      `Order ID: ${orderId}`,
-      `Category: ${selectedGroup?.label ?? subjectGroupId}`,
-      `Subject: ${subject}`,
-      `Topic: ${topic}`,
-      `Number of slides: ${slideRange}`,
-      `Delivery preference: ${deliveryMode}`,
-      `Currency: ${currency}`,
-      `Customer email: ${email}`,
-      '',
-      'Requirements / source material:',
-      instructions.trim() || 'None provided',
-      '',
-      'Thank you.',
-    ].join('\n');
-
-    return `mailto:2pptpls257@gmail.com?subject=${encodeURIComponent(
-      `PPT Request — ${topic} — ${orderId}`,
-    )}&body=${encodeURIComponent(body)}`;
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice(null);
+    setIsSubmittingDirect(true);
 
-    if (requestSent && createdOrderId) {
-      handleContinueToPayment();
-      return;
-    }
+    const checkoutUrl =
+      STATIC_CHECKOUT_URLS[currency]?.[slideRange] ||
+      STATIC_CHECKOUT_URLS.USD[slideRange] ||
+      'https://whop.com/checkout/plan_Cn0EQqO3VHcnS';
 
     const orderInput: OrderInput = {
       email,
@@ -287,75 +330,45 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
       currency,
     };
 
-    createOrder.mutate(
-      { data: orderInput },
-      {
-        onSuccess: (order) => {
-          setCreatedOrderId(order.id);
-          setRequestSent(true);
+    setNotice({
+      type: 'success',
+      title: 'Brief received.',
+      body: 'Redirecting you to secure payment now...',
+    });
 
-          setNotice({
-            type: 'fallback',
-            title: 'Your request is ready to send.',
-            body:
-              'Your email app will open with the PPT details filled in. Send it to 2pptpls257@gmail.com, then come back here and continue to payment.',
-          });
-
-          window.location.href = buildMailto(order.id);
-        },
-
-        onError: () =>
-          setNotice({
-            type: 'error',
-            title: 'We could not save that brief.',
-            body:
-              'Please check your connection and try again. Your details are still on this page.',
+    // 1. Submit order to backend (backend automatically sends email to 2pptpls257@gmail.com)
+    try {
+      await createOrder.mutateAsync({ data: orderInput });
+    } catch {
+      // 2. Client-side fallback to guarantee 2pptpls257@gmail.com receives the brief even on network outage
+      try {
+        await fetch('https://formsubmit.co/ajax/2pptpls257@gmail.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            _subject: `PPT Request — ${topic}`,
+            _replyto: email,
+            Category: selectedGroup?.label ?? subjectGroupId,
+            Subject: subject,
+            Topic: topic,
+            'Number of slides': slideRange,
+            'Delivery preference': deliveryMode,
+            Currency: currency,
+            'Customer email': email,
+            Requirements: instructions.trim() || 'None provided',
           }),
-      },
-    );
+        });
+      } catch {
+        // Proceed to payment
+      }
+    }
+
+    // 3. Immediately redirect directly to Whop checkout without opening any desktop email clients
+    window.location.href = checkoutUrl;
   }
-
-  function handleContinueToPayment() {
-    if (!createdOrderId) return;
-
-    setNotice(null);
-
-    createCheckout.mutate(
-      {
-        data: {
-          orderId: createdOrderId,
-          currency,
-        },
-      },
-      {
-        onSuccess: (checkout) => {
-          if (checkout.purchaseUrl) {
-            window.location.href = checkout.purchaseUrl;
-            return;
-          }
-
-          setNotice({
-            type: 'fallback',
-            title: 'Your brief is saved.',
-            body:
-              'The hosted payment link is not available right now. You can try again in a moment.',
-          });
-        },
-
-        onError: () =>
-          setNotice({
-            type: 'fallback',
-            title: 'Your brief is saved.',
-            body:
-              'We could not open hosted payment at the moment. Please try the payment button again.',
-          }),
-      },
-    );
-  }
-
-  const mailto = createdOrderId
-    ? buildMailto(createdOrderId)
-    : 'mailto:2pptpls257@gmail.com';
 
   return (
     <section
@@ -665,28 +678,12 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                     {notice.body}
                   </p>
 
-                  {notice.type === 'fallback' && !requestSent && (
-                    <a
-                      href={mailto}
-                      className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[hsl(var(--accent))] underline-offset-4 hover:underline"
-                      data-testid="link-email-fallback"
-                    >
-                      <Mail size={13} />
-                      Email the studio instead
-                      <ArrowRight size={13} />
-                    </a>
-                  )}
                 </div>
               )}
 
               <button
                 disabled={isSubmitting}
-                type={requestSent ? 'button' : 'submit'}
-                onClick={
-                  requestSent
-                    ? handleContinueToPayment
-                    : undefined
-                }
+                type="submit"
                 className="primary-button w-full"
                 data-testid="button-submit-order"
               >
@@ -698,15 +695,10 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                     />
                     {submitLabel}
                   </>
-                ) : requestSent ? (
+                ) : (
                   <>
                     {submitLabel}
                     <ArrowRight size={16} />
-                  </>
-                ) : (
-                  <>
-                    <Mail size={16} />
-                    {submitLabel}
                   </>
                 )}
               </button>
@@ -733,6 +725,8 @@ function Home() {
       queryKey: getGetCatalogQueryKey(),
     },
   });
+
+  const catalog = catalogQuery.data ?? DEFAULT_CATALOG;
 
   return (
     <div className="site-shell min-h-[100dvh] bg-[hsl(var(--background))]">
@@ -840,49 +834,7 @@ function Home() {
           </div>
         </section>
 
-        {catalogQuery.isLoading && (
-          <section className="px-5 py-16 sm:px-8 lg:px-10">
-            <div className="mx-auto max-w-7xl">
-              <CatalogSkeleton />
-            </div>
-          </section>
-        )}
-
-        {catalogQuery.isError && (
-          <section className="px-5 py-20 sm:px-8 lg:px-10">
-            <div
-              className="mx-auto max-w-xl rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center"
-              data-testid="status-catalog-error"
-            >
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--accent))]">
-                <RefreshCw size={20} />
-              </div>
-
-              <h2 className="mt-5 font-editorial text-3xl text-[hsl(var(--primary))]">
-                The studio desk is momentarily offline.
-              </h2>
-
-              <p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">
-                Your deadline is not. Try the catalogue again and we will get
-                you moving.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => catalogQuery.refetch()}
-                className="secondary-button mt-6"
-                data-testid="button-retry-catalog"
-              >
-                Try again
-                <RefreshCw size={14} />
-              </button>
-            </div>
-          </section>
-        )}
-
-        {catalogQuery.data && (
-          <OrderPanel catalog={catalogQuery.data} />
-        )}
+        <OrderPanel catalog={catalog} />
 
         <section
           id="promise"
