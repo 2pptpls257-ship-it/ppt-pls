@@ -332,8 +332,8 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
 
     setNotice({
       type: 'success',
-      title: 'Brief received.',
-      body: 'Redirecting you to secure payment now...',
+      title: 'Brief received & dispatched.',
+      body: 'Your brief details have been forwarded to 2pptpls257@gmail.com. Directing you to checkout in 2 seconds...',
     });
 
     // 1. Submit order to backend (backend automatically sends email to 2pptpls257@gmail.com)
@@ -366,8 +366,10 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
       }
     }
 
-    // 3. Immediately redirect directly to Whop checkout without opening any desktop email clients
-    window.location.href = checkoutUrl;
+    // 3. Redirect to checkout after brief confirmation
+    setTimeout(() => {
+      window.location.href = checkoutUrl;
+    }, 1800);
   }
 
   return (

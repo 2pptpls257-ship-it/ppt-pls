@@ -1,7 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-const TARGET_EMAIL = process.env.ORDER_NOTIFICATION_EMAIL || "2pptpls257@gmail.com";
-
 async function sendEmail(order) {
   const subject = `PPT Request — ${order.topic} — ${order.id}`;
   const textBody = [
@@ -24,41 +22,67 @@ async function sendEmail(order) {
     `Created at: ${order.createdAt}`,
   ].join("\n");
 
-  // 1. SMTP if environment variables configured in Vercel
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const smtpUser =
+    process.env.SMTP_USER ||
+    process.env.EMAIL_USER ||
+    process.env.GMAIL_USER ||
+    process.env.MAIL_USER ||
+    process.env.MAIL_USERNAME ||
+    process.env.EMAIL;
+
+  const smtpPass =
+    process.env.SMTP_PASS ||
+    process.env.SMTP_PASSWORD ||
+    process.env.EMAIL_PASS ||
+    process.env.EMAIL_PASSWORD ||
+    process.env.GMAIL_PASS ||
+    process.env.GMAIL_PASSWORD ||
+    process.env.GMAIL_APP_PASSWORD ||
+    process.env.MAIL_PASS ||
+    process.env.MAIL_PASSWORD ||
+    process.env.APP_PASSWORD;
+
+  const targetEmail =
+    process.env.ORDER_NOTIFICATION_EMAIL ||
+    smtpUser ||
+    "2pptpls257@gmail.com";
+
+  // 1. SMTP if password configured in Vercel environment variables
+  if (smtpPass) {
+    const user = smtpUser || "2pptpls257@gmail.com";
     try {
       const nodemailer = (await import("nodemailer")).default;
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || "smtp.gmail.com",
-        port: Number(process.env.SMTP_PORT) || 465,
-        secure: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) === 465 : true,
+        service: "gmail",
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: user,
+          pass: smtpPass.replace(/\s+/g, ""),
         },
       });
 
       await transporter.sendMail({
-        from: `"PPT pls Orders" <${process.env.SMTP_USER}>`,
-        to: TARGET_EMAIL,
+        from: `"PPT pls Orders" <${user}>`,
+        to: targetEmail,
         replyTo: order.email,
         subject,
         text: textBody,
       });
-      console.log(`[SMTP] Order email dispatched to ${TARGET_EMAIL} for order ${order.id}`);
-      return true;
+      console.log(`[SMTP] Order email dispatched to ${targetEmail} for order ${order.id}`);
+      return { success: true, method: "smtp" };
     } catch (err) {
-      console.error("[SMTP] Send failed, falling back to FormSubmit:", err);
+      console.error("[SMTP] Send failed, trying FormSubmit:", err?.message || err);
     }
   }
 
   // 2. Automated HTTP forwarding fallback (FormSubmit)
   try {
-    const resp = await fetch(`https://formsubmit.co/ajax/${TARGET_EMAIL}`, {
+    const resp = await fetch(`https://formsubmit.co/ajax/${targetEmail}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        Origin: "https://ppt-pls-api-server.vercel.app",
+        Referer: "https://ppt-pls-api-server.vercel.app/",
       },
       body: JSON.stringify({
         _subject: subject,
@@ -75,15 +99,16 @@ async function sendEmail(order) {
         "Created At": order.createdAt,
       }),
     });
-    if (resp.ok) {
-      console.log(`[FormSubmit] Order notification dispatched to ${TARGET_EMAIL}`);
-      return true;
+    const resJson = await resp.json().catch(() => ({}));
+    console.log(`[FormSubmit] response:`, resJson);
+    if (resJson.success === "true" || resp.ok) {
+      return { success: true, method: "formsubmit" };
     }
   } catch (err) {
     console.error("[FormSubmit] Send failed:", err);
   }
 
-  return false;
+  return { success: false };
 }
 
 export default async function handler(req, res) {
@@ -101,7 +126,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Handle parsed body or parse from buffer/string if needed
   let data = req.body;
   if (typeof data === "string") {
     try {
@@ -124,7 +148,7 @@ export default async function handler(req, res) {
     createdAt: new Date().toISOString(),
   };
 
-  await sendEmail(order);
+  const emailResult = await sendEmail(order);
 
   res.status(201).json({
     id: order.id,
@@ -133,5 +157,6 @@ export default async function handler(req, res) {
     topic: order.topic,
     deliveryEta: "within 1 hour after payment and brief review",
     checkoutUrl: null,
+    emailDispatched: emailResult.success,
   });
 }
