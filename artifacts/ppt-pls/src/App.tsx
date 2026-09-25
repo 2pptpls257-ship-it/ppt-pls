@@ -248,6 +248,44 @@ function PriceLine({
   );
 }
 
+function buildMailtoUrl(params: {
+  topic: string;
+  category: string;
+  subject: string;
+  slideRange: string;
+  deliveryMode: string;
+  currency: string;
+  price?: number;
+  email: string;
+  instructions: string;
+}) {
+  const subjectLine = `PPT Request — ${params.topic}`;
+  const priceDisplay = params.price
+    ? `${params.currency === 'INR' ? '₹' : '$'}${params.price} ${params.currency}`
+    : params.currency;
+
+  const bodyLines = [
+    'Hi PPT pls,',
+    '',
+    'I would like to order a presentation deck with the following details:',
+    '',
+    `• Topic: ${params.topic}`,
+    `• Category: ${params.category}`,
+    `• Subject: ${params.subject}`,
+    `• Number of slides: ${params.slideRange}`,
+    `• Delivery preference: ${params.deliveryMode === 'personalized' ? 'Personalized (Refined & custom)' : 'Standard'}`,
+    `• Estimated price: ${priceDisplay}`,
+    `• Customer email: ${params.email}`,
+    '',
+    'Requirements / source material:',
+    params.instructions || 'None provided',
+    '',
+    'Thank you!',
+  ];
+
+  return `mailto:2pptpls257@gmail.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyLines.join('\r\n'))}`;
+}
+
 function OrderPanel({ catalog }: { catalog: Catalog }) {
   const groups = catalog.groups ?? [];
 
@@ -268,16 +306,15 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
   const [email, setEmail] = useState('');
 
   const [notice, setNotice] = useState<{
-    type: 'error' | 'fallback';
+    type: 'error' | 'fallback' | 'success';
     title: string;
     body: string;
   } | null>(null);
 
-  const [createdOrderId, setCreatedOrderId] = useState('');
+  const [mailtoLink, setMailtoLink] = useState('');
   const [requestSent, setRequestSent] = useState(false);
 
   const createOrder = useCreateOrder();
-  const createCheckout = useCreateCheckout();
 
   const selectedGroup = useMemo<SubjectGroup | undefined>(
     () => groups.find((group) => group.id === subjectGroupId),
@@ -300,76 +337,68 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
     setSlideRange(selectedGroup?.prices?.[0]?.slides ?? '');
   }, [selectedGroup]);
 
-  const [isSubmittingDirect, setIsSubmittingDirect] = useState(false);
-  const isSubmitting = createOrder.isPending || isSubmittingDirect;
-
-  const submitLabel = isSubmitting
-    ? 'Saving brief & redirecting to checkout...'
-    : 'Continue to payment';
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice(null);
-    setIsSubmittingDirect(true);
 
+    const normalizedSlideRange = slideRange.replace('-', '–');
     const checkoutUrl =
+      STATIC_CHECKOUT_URLS[currency]?.[normalizedSlideRange] ||
       STATIC_CHECKOUT_URLS[currency]?.[slideRange] ||
+      STATIC_CHECKOUT_URLS.USD[normalizedSlideRange] ||
       STATIC_CHECKOUT_URLS.USD[slideRange] ||
       'https://whop.com/checkout/plan_Cn0EQqO3VHcnS';
 
-    const orderInput: OrderInput = {
-      email,
-      subjectGroup: subjectGroupId,
+    // If email brief was already triggered, button proceeds straight to secure payment
+    if (requestSent) {
+      window.location.href = checkoutUrl;
+      return;
+    }
+
+    const price = selectedPrice?.[currency.toLowerCase() as 'usd' | 'inr'];
+    const generatedMailto = buildMailtoUrl({
+      topic,
+      category: selectedGroup?.label ?? subjectGroupId,
       subject,
       slideRange,
-      topic,
-      ...(instructions.trim()
-        ? { instructions: instructions.trim() }
-        : {}),
       deliveryMode,
       currency,
-    };
+      price,
+      email,
+      instructions: instructions.trim(),
+    });
+
+    setMailtoLink(generatedMailto);
+    setRequestSent(true);
+
+    // 1. Immediately launch user's email client to prompt permission & send from their email
+    window.location.href = generatedMailto;
+
+    // 2. Non-blocking background sync with backend
+    createOrder.mutate(
+      {
+        data: {
+          email,
+          subjectGroup: subjectGroupId,
+          subject,
+          slideRange,
+          topic,
+          ...(instructions.trim()
+            ? { instructions: instructions.trim() }
+            : {}),
+          deliveryMode,
+          currency,
+        },
+      },
+      {
+        onError: () => {},
+      },
+    );
 
     setNotice({
       type: 'success',
-      title: 'Brief received & dispatched.',
-      body: 'Your brief details have been forwarded to 2pptpls257@gmail.com. Directing you to checkout in 2 seconds...',
+      title: 'Email brief draft opened!',
+      body: `Your email client has been opened with your brief. Please click Send in your email client to send it from ${email} to 2pptpls257@gmail.com, then click "Continue to secure payment" below.`,
     });
-
-    // 1. Submit order to backend (backend automatically sends email to 2pptpls257@gmail.com)
-    try {
-      await createOrder.mutateAsync({ data: orderInput });
-    } catch {
-      // 2. Client-side fallback to guarantee 2pptpls257@gmail.com receives the brief even on network outage
-      try {
-        await fetch('https://formsubmit.co/ajax/2pptpls257@gmail.com', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            _subject: `PPT Request — ${topic}`,
-            _replyto: email,
-            Category: selectedGroup?.label ?? subjectGroupId,
-            Subject: subject,
-            Topic: topic,
-            'Number of slides': slideRange,
-            'Delivery preference': deliveryMode,
-            Currency: currency,
-            'Customer email': email,
-            Requirements: instructions.trim() || 'None provided',
-          }),
-        });
-      } catch {
-        // Proceed to payment
-      }
-    }
-
-    // 3. Redirect to checkout after brief confirmation
-    setTimeout(() => {
-      window.location.href = checkoutUrl;
-    }, 1800);
   }
 
   return (
@@ -578,7 +607,10 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                   required
                   minLength={3}
                   value={topic}
-                  onChange={(event) => setTopic(event.target.value)}
+                  onChange={(event) => {
+                    setTopic(event.target.value);
+                    if (requestSent) setRequestSent(false);
+                  }}
                   placeholder="e.g. Acute kidney injury"
                   className="form-input"
                   data-testid="input-topic"
@@ -592,9 +624,10 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
 
                 <textarea
                   value={instructions}
-                  onChange={(event) =>
-                    setInstructions(event.target.value)
-                  }
+                  onChange={(event) => {
+                    setInstructions(event.target.value);
+                    if (requestSent) setRequestSent(false);
+                  }}
                   placeholder="Audience, learning objectives, references, tone..."
                   rows={3}
                   className="form-input resize-none"
@@ -609,7 +642,10 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                   required
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    if (requestSent) setRequestSent(false);
+                  }}
                   placeholder="you@university.edu"
                   className="form-input"
                   data-testid="input-email"
@@ -668,39 +704,55 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                   className={`mb-4 rounded-xl border p-4 ${
                     notice.type === 'error'
                       ? 'border-[hsl(var(--destructive)/.35)] bg-[hsl(var(--destructive)/.06)]'
-                      : 'border-[hsl(var(--accent)/.4)] bg-[hsl(var(--accent)/.08)]'
+                      : 'border-emerald-500/40 bg-emerald-500/10'
                   }`}
                   data-testid={`status-${notice.type}`}
                 >
-                  <p className="text-sm font-semibold text-[hsl(var(--primary))]">
-                    {notice.title}
-                  </p>
+                  <div className="flex items-start gap-2.5">
+                    {notice.type === 'error' ? (
+                      <X className="mt-0.5 shrink-0 text-red-500" size={17} />
+                    ) : (
+                      <Check className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" size={17} />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-[hsl(var(--primary))]">
+                        {notice.title}
+                      </p>
 
-                  <p className="mt-1 text-xs leading-5 text-[hsl(var(--muted-foreground))]">
-                    {notice.body}
-                  </p>
+                      <p className="mt-1 text-xs leading-5 text-[hsl(var(--muted-foreground))]">
+                        {notice.body}
+                      </p>
 
+                      {mailtoLink && (
+                        <div className="mt-2.5">
+                          <a
+                            href={mailtoLink}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--accent))] underline underline-offset-2 hover:opacity-80"
+                          >
+                            <Mail size={13} />
+                            Email app didn't open? Click here to launch email
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
               <button
-                disabled={isSubmitting}
                 type="submit"
                 className="primary-button w-full"
                 data-testid="button-submit-order"
               >
-                {isSubmitting ? (
+                {requestSent ? (
                   <>
-                    <LoaderCircle
-                      className="animate-spin"
-                      size={16}
-                    />
-                    {submitLabel}
+                    Continue to secure payment
+                    <ArrowRight size={16} />
                   </>
                 ) : (
                   <>
-                    {submitLabel}
-                    <ArrowRight size={16} />
+                    Send brief via email
+                    <Mail size={16} />
                   </>
                 )}
               </button>
@@ -710,7 +762,9 @@ function OrderPanel({ catalog }: { catalog: Catalog }) {
                   size={12}
                   className="text-[hsl(var(--secondary-foreground))]"
                 />
-                You will review your brief before payment
+                {requestSent
+                  ? 'Send the email in your mail app, then click above to finish payment'
+                  : 'Sends email directly from your mail app before secure checkout'}
               </p>
             </div>
           </form>
