@@ -1,19 +1,19 @@
 const preClinicalPrices = [
-  { id: "pre-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 249 },
-  { id: "pre-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 419 },
-  { id: "pre-25-30", label: "Deep dive", slides: "25–30", usd: 5.99, inr: 499 },
+  { id: "pre-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 284 },
+  { id: "pre-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 474 },
+  { id: "pre-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 759 },
 ];
 
 const paraClinicalPrices = [
-  { id: "para-10-15", label: "Essentials", slides: "10–15", usd: 3.99, inr: 329 },
-  { id: "para-15-25", label: "Complete", slides: "15–25", usd: 5.99, inr: 499 },
-  { id: "para-25-30", label: "Deep dive", slides: "25–30", usd: 6.99, inr: 579 },
+  { id: "para-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 284 },
+  { id: "para-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 474 },
+  { id: "para-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 759 },
 ];
 
 const clinicalPrices = [
-  { id: "clinical-10-15", label: "Essentials", slides: "10–15", usd: 4.99, inr: 419 },
-  { id: "clinical-15-25", label: "Complete", slides: "15–25", usd: 6.99, inr: 579 },
-  { id: "clinical-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 669 },
+  { id: "clinical-10-15", label: "Essentials", slides: "10–15", usd: 2.99, inr: 284 },
+  { id: "clinical-15-25", label: "Complete", slides: "15–25", usd: 4.99, inr: 474 },
+  { id: "clinical-25-30", label: "Deep dive", slides: "25–30", usd: 7.99, inr: 759 },
 ];
 
 const catalog = {
